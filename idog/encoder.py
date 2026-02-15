@@ -103,12 +103,10 @@ class KGPEncoderBase:
         # c=...,r=...: Specify the image dimensions in terms of character cells
         # s=...,v=...: Specify the image dimensions in pixels, required when transmitting raw pixel data
         # o=z: Enable zlib compression (optional)
-        options = f"i={self.image_id},a=T,f={format},t={self.medium_mgr.medium_identifier()},q=2,"\
+        return f"a=T,f={format},q=2,"\
             f"c={self.display_cols},r={self.display_rows},"\
-            f"s={self.resized_image.width},v={self.resized_image.height}"
-        if self.medium_mgr.do_compression():
-            options += ",o=z"
-        return options
+            f"s={self.resized_image.width},v={self.resized_image.height}"\
+            + self.medium_mgr.medium_options()
 
     def construct_KGP(self, chunk_size: int = 4096) -> list[str]:
         """Construct the KGP escape sequences for the image"""

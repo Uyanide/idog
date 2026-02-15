@@ -16,7 +16,7 @@ def zlib_compress(data: bytes) -> bytes: return zlib.compress(data)
 
 
 def png_makechunk(type: bytes, data: bytes) -> bytes:
-    return struct.pack(">I", len(data)) + type + data + struct.pack(">I", zlib.crc32(type + data))
+    return struct.pack(">I", len(data)) + type + data + struct.pack(">I", zlib.crc32(type + data, 0))
 
 
 def mock_png_data(width: int, height: int) -> bytes:
@@ -80,10 +80,12 @@ def smart_resize(image: Image.Image,
     :param cell_width:
         The width of a character cell in pixels.
         Set to 1 for pixel-perfect resizing, or a larger value to resize based on character cell dimensions.
+        Also used as the minimum width of the resized image.
     :type cell_width: int
     :param cell_height:
         The height of a character cell in pixels.
         Set to 1 for pixel-perfect resizing, or a larger value to resize based on character cell dimensions.
+        Also used as the minimum height of the resized image.
     :type cell_height: int
     :param max_cols:
         The maximum number of columns of the resized image.
@@ -99,6 +101,8 @@ def smart_resize(image: Image.Image,
         The resized image
     :rtype: Image
     """
+    if cell_height <= 0 or cell_width <= 0:
+        raise ValueError("Cell dimensions must be positive")
     image_width, image_height = image.size
     image_aspect = image_width / image_height
 
@@ -165,6 +169,11 @@ def smart_resize(image: Image.Image,
         if image_width <= resized_width and image_height <= resized_height:
             resized_width = image_width
             resized_height = image_height
+
+    if resized_width < cell_width:
+        resized_width = cell_width
+    if resized_height < cell_height:
+        resized_height = cell_height
 
     display_cols = int(resized_width / cell_width)
     display_rows = int(resized_height / cell_height)

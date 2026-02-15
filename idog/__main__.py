@@ -13,7 +13,7 @@ def main(args=None):
     options = KGPOptions(KGPOptions.get_parser().parse_args(args=args))
 
     if options.do_query:
-        for k, v in KGPQuery.query().items():
+        for k, v in KGPQuery.query_all().items():
             print(f"{k}: {v}")
         return
 

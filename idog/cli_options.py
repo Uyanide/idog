@@ -34,6 +34,9 @@ class KGPOptions:
     @staticmethod
     def get_parser() -> argparse.ArgumentParser:
         parser = argparse.ArgumentParser(description="KGP Image Display Options")
+        parser.add_argument("-q", "--query", action="store_true",
+                            help="Perform capability queries and quit (no image will be displayed)")
+        parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose logging")
         parser.add_argument("path", type=str, help="Path to the image file", nargs="?")
         parser.add_argument("--width", type=int, default=-1, help="Number of columns to display (-1: max possible (default))")
         parser.add_argument("--height", type=int, default=-1, help="Number of rows to display (-1: max possible (default))")
@@ -46,9 +49,6 @@ class KGPOptions:
         parser.add_argument("--transmission-medium", type=str, default="auto",
                             help=f"Transmission medium for data (available options: {', '.join(KGP_TRANSMISSION_MEDIUM.keys())}, default: auto)")
         parser.add_argument("--image-id", type=int, default=-1, help="Image ID to use for KGP (0 to 0xFFFFFF, default: random)")
-        parser.add_argument("-q", "--query", action="store_true",
-                            help="Perform capability queries and quit (no image will be displayed)")
-        parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose logging")
         parser.add_argument("--png", action="store_true", help="Transfer PNG data instead of raw pixel data")
         return parser
 

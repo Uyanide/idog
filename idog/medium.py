@@ -13,7 +13,6 @@ class KGPMediumCreationError(Exception):
 class KGPMedium(ABC):
     image_id: int
 
-    @abstractmethod
     def __init__(self, image_id: int, data: bytes) -> None:
         self.image_id = image_id
 
@@ -30,6 +29,10 @@ class KGPMedium(ABC):
         pass
 
     @abstractmethod
+    def medium_options(self) -> str:
+        pass
+
+    @abstractmethod
     def do_compression(self) -> bool:
         pass
 
@@ -41,15 +44,25 @@ class KGPMedium(ABC):
             return KGPMediumSharedMemory(image_id, data)
         elif medium == "t":
             return KGPMediumTempFile(image_id, data)
+        elif medium == "f":
+            return KGPMediumFile(image_id, data)
         else:
             raise KGPMediumCreationError(f"Unsupported transmission medium: {medium}")
 
 
 class KGPMediumDirect(KGPMedium):
+    original_size: int
+    is_png: bool
     payload: str
+
+    @staticmethod
+    def detect_png(data: bytes) -> bool:
+        return data.startswith(b"\x89PNG\r\n\x1a\n")
 
     def __init__(self, image_id: int, data: bytes) -> None:
         super().__init__(image_id, data)
+        self.original_size = len(data)
+        self.is_png = self.detect_png(data)
         self.payload = base64_encode(zlib_compress(data))
 
     def cleanup(self):
@@ -60,6 +73,9 @@ class KGPMediumDirect(KGPMedium):
 
     def medium_identifier(self) -> str:
         return "d"
+
+    def medium_options(self) -> str:
+        return f",i={self.image_id},t={self.medium_identifier()},o=z{f",S={self.original_size}" if self.is_png else ""}"
 
     def do_compression(self) -> bool:
         return True
@@ -126,6 +142,9 @@ class KGPMediumSharedMemory(KGPMedium):
     def medium_identifier(self) -> str:
         return "s"
 
+    def medium_options(self) -> str:
+        return f",i={self.image_id},t={self.medium_identifier()}"
+
     def do_compression(self) -> bool:
         return False
 
@@ -134,7 +153,7 @@ class KGPMediumTempFile(KGPMedium):
     file_path: str
 
     def _construct_file_path(self) -> str:
-        return tempfile.mkstemp(prefix="idog_")[1]
+        return tempfile.mkstemp(prefix="tty-graphics-protocol_")[1]
 
     def __init__(self, image_id: int, data: bytes) -> None:
         super().__init__(image_id, data)
@@ -154,5 +173,13 @@ class KGPMediumTempFile(KGPMedium):
     def medium_identifier(self) -> str:
         return "t"
 
+    def medium_options(self) -> str:
+        return f",i={self.image_id},t={self.medium_identifier()}"
+
     def do_compression(self) -> bool:
         return False
+
+
+class KGPMediumFile(KGPMediumTempFile):
+    def medium_identifier(self) -> str:
+        return "f"
