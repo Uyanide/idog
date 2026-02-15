@@ -31,7 +31,7 @@ class KGPEncoderBase:
 
     def _init_image(self, options: KGPOptions) -> None:
         """Load the image and convert it to a supported pixel format"""
-        image = Image.open(options.path).convert("RGB")
+        image = Image.open(options.path)
         if image.mode in ("RGBA", "LA") or (image.mode == "P" and "transparency" in image.info):
             self.image = image.convert("RGBA")
             logging.debug("Image has alpha channel, using RGBA format")
